@@ -59,7 +59,9 @@ import { dedupe } from 'wretch-middlewares'
 
 wretch().middlewares([
     dedupe({
-        /* options */
+        /* Options - defaults below */
+        skip: (url, opts) => opts.skipDedupe || opts.method !== 'GET',
+        key: (url, opts) => opts.method + '@' + url
     })
 ])./* ... */
 ```
@@ -92,7 +94,7 @@ The maximum number of retries before resolving the promise with the last error. 
 
 The request will be retried until that condition is satisfied.
 
-*(default: response.ok)*
+*(default: `response.ok`)*
 
 #### Usage
 
@@ -102,7 +104,11 @@ import { retry } from 'wretch-middlewares'
 
 wretch().middlewares([
     retry({
-        /* options */
+        /* Options - defaults below */
+        delayTimer: 500,
+        delayRamp: (delay, nbOfAttempts) => delay * nbOfAttempts
+        maxAttempts: 10,
+        until: response => response.ok
     })
 ])./* ... */
 ```
@@ -139,7 +145,10 @@ import { throttlingCache } from 'wretch-middlewares'
 
 wretch().middlewares([
     throttlingCache({
-        /* options */
+        /* Options - defaults below */
+        throttle: 1000,
+        skip: opts.skipCache || opts.method !== 'GET',
+        key: (url, opts) => opts.method + '@' + url
     })
 ])./* ... */
 ```
@@ -161,6 +170,6 @@ import wretch from 'wretch'
 import { delay } from 'wretch-middlewares'
 
 wretch().middlewares([
-    delay(/* time */)
+    delay(1000)
 ])./* ... */
 ```
