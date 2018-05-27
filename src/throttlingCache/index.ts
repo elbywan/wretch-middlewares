@@ -40,7 +40,7 @@ const defaultKey = (url, opts) => opts.method + '@' + url
  *
  */
 export const throttlingCache: ThrottlingCacheMiddleware = ({
-    throttle = 0,
+    throttle = 1000,
     skip = defaultSkip,
     key = defaultKey
 } = {}) => {

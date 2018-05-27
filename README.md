@@ -43,9 +43,13 @@ npm i wretch-middlewares
 
 If skip returns true, then the dedupe check is skipped.
 
+*(default: `opts.skipDedupe || opts.method !== 'GET'`)*
+
 - *key* : `(url, opts) => string`
 
 Returns a key that is used to identify the request.
+
+*(default: `opts.method + '@' + url`)*
 
 #### Usage
 
@@ -111,15 +115,21 @@ wretch().middlewares([
 
 - *throttle* : `milliseconds`
 
-The response will be stored for this amount of time before being deleted from the cache
+The response will be stored for this amount of time before being deleted from the cache.
+
+*(default: 1000)*
 
 - *skip* : `(url, opts) => boolean`
 
 If skip returns true, then the dedupe check is skipped.
 
+*(default: `opts.skipCache || opts.method !== 'GET'`)*
+
 - *key* : `(url, opts) => string`
 
 Returns a key that is used to identify the request.
+
+*(default: `opts.method + '@' + url`)*
 
 #### Usage
 

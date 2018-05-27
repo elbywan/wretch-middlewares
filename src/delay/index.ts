@@ -2,7 +2,7 @@ import { ConfiguredMiddleware } from 'wretch/dist/middleware'
 
 /* Types */
 
-export type DelayMiddleware = (time?: number) => ConfiguredMiddleware
+export type DelayMiddleware = (time: number) => ConfiguredMiddleware
 
 /**
  * ##  Delay middleware
