@@ -1,6 +1,6 @@
 {
   "name": "wretch-middlewares",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Middlewares for the wretch library",
   "main": "./dist/umd/wretch-middlewares.min.js",
   "module": "./dist/index.js",
@@ -16,6 +16,9 @@
     "serve": "http-server -c-1 docs",
     "dev": "concurrently \"npm run watch\" \"npm run serve\""
   },
+  "files": [
+      "dist"
+  ],
   "keywords": [
     "wretch",
     "fetch",
