@@ -22,7 +22,7 @@ const defaultKey = (url, opts) => opts.method + '@' + url
 /**
  * ## Throttling cache middleware
  *
- * #### A throttling cache which stores and serves server responses on a cache for a certain amount of time.
+ * #### A throttling cache which stores and serves server responses for a certain amount of time.
  *
  * **Options**
  *

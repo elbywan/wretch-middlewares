@@ -48,7 +48,7 @@ const defaultUntil = response => response.ok
  *
  * > The request will be retried until that condition is satisfied.
  *
- * *(default: !response.ok)*
+ * *(default: response.ok)*
  */
 export const retry: RetryMiddleware = ({
     delayTimer = 500,

@@ -88,7 +88,7 @@ The maximum number of retries before resolving the promise with the last error. 
 
 The request will be retried until that condition is satisfied.
 
-*(default: !response.ok)*
+*(default: response.ok)*
 
 #### Usage
 
@@ -105,7 +105,7 @@ wretch().middlewares([
 
 ## Throttling cache
 
-**A throttling cache which stores and serves server responses on a cache for a certain amount of time.**
+**A throttling cache which stores and serves server responses for a certain amount of time.**
 
 #### Options
 
