@@ -1,0 +1,52 @@
+{
+  "name": "wretch-middlewares",
+  "version": "0.1.0",
+  "description": "Middlewares for the wretch library",
+  "main": "./dist/umd/wretch-middlewares.min.js",
+  "module": "./dist/index.js",
+  "jsnext:main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "start": "npm run build",
+    "prebuild": "npm run lint",
+    "build": "rimraf dist && rimraf docs/lib && tsc -p . && rollup -c && rollup -c -o docs/lib/index.js",
+    "fix": "tslint --fix -p tsconfig.json -t codeFrame",
+    "lint": "tslint -p tsconfig.json -t codeFrame",
+    "watch": "rollup -c -w -o docs/lib/index.js",
+    "serve": "http-server -c-1 docs",
+    "dev": "concurrently \"npm run watch\" \"npm run serve\""
+  },
+  "keywords": [
+    "wretch",
+    "fetch",
+    "ajax",
+    "request",
+    "middleware",
+    "middlewares"
+  ],
+  "homepage": "https://elbywan.github.io/wretch",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/elbywan/wretch-middlewares"
+    },
+    "bugs": {
+        "url": "https://github.com/elbywan/wretch-middlewares/issues"
+  },
+  "author": "Julien Elbaz",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^3.5.1",
+    "http-server": "^0.11.1",
+    "rimraf": "^2.6.2",
+    "rollup": "^0.59.3",
+    "rollup-plugin-typescript": "^0.8.1",
+    "rollup-plugin-uglify": "^4.0.0",
+    "tslint": "^5.10.0",
+    "typescript": "^2.8.3",
+    "wretch": "^1.2.0"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "wretch": "^1.2.0"
+  }
+}
