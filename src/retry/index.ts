@@ -3,7 +3,7 @@ import { ConfiguredMiddleware } from 'wretch/dist/middleware'
 /* Types */
 
 export type DelayRampFunction = (delay: number, nbOfAttempts: number) => number
-export type UntilFunction = (response: Response) => boolean
+export type UntilFunction = (response: Response) => boolean | Promise<boolean>
 export type RetryOptions = {
     delayTimer?: number,
     delayRamp?: DelayRampFunction,
@@ -44,7 +44,7 @@ const defaultUntil = response => response.ok
  *
  * *(default: 10)*
  *
- * - *until* `(fetch response) => boolean`
+ * - *until* `(fetch response) => boolean || Promise<boolean>`
  *
  * > The request will be retried until that condition is satisfied.
  *
@@ -61,23 +61,24 @@ export const retry: RetryMiddleware = ({
         let numberOfAttemptsMade = 0
 
         const checkStatus = response => {
-            // If the response is unexpected
-            if (!until(response.clone())) {
-                numberOfAttemptsMade++
+            return Promise.resolve(until(response.clone())).then(done => {
+                 // If the response is unexpected
+                if(!done) {
+                    numberOfAttemptsMade++
 
-                if (!maxAttempts || numberOfAttemptsMade <= maxAttempts) {
-                    // We need to recurse until we have a correct response and chain the checks
-                    return new Promise(resolve => {
-                        const delay = defaultDelayRamp(delayTimer, numberOfAttemptsMade)
-                        setTimeout(() => {
-                            resolve(next(url, opts))
-                        }, delay)
-                    }).then(checkStatus)
+                    if (!maxAttempts || numberOfAttemptsMade <= maxAttempts) {
+                        // We need to recurse until we have a correct response and chain the checks
+                        return new Promise(resolve => {
+                            const delay = defaultDelayRamp(delayTimer, numberOfAttemptsMade)
+                            setTimeout(() => {
+                                resolve(next(url, opts))
+                            }, delay)
+                        }).then(checkStatus)
+                    }
                 }
-            }
 
-            // If the response is ok
-            return response
+                return response
+            })
         }
 
         // Willingly omitted .catch which prevents handling network errors and should throw
