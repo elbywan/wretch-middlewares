@@ -43,13 +43,9 @@ npm i wretch-middlewares
 
 If skip returns true, then the dedupe check is skipped.
 
-*(default: `opts.skipDedupe || opts.method !== 'GET'`)*
-
 - *key* : `(url, opts) => string`
 
 Returns a key that is used to identify the request.
-
-*(default: `opts.method + '@' + url`)*
 
 #### Usage
 
@@ -76,25 +72,17 @@ wretch().middlewares([
 
 The timer between each attempt.
 
-*(default: 500)*
-
 - *delayRamp* : `(delay, nbOfAttempts) => milliseconds`
 
 The custom function that is used to calculate the actual delay based on the the timer & the number of attemps.
-
-*(default: delay * nbOfAttemps)*
 
 - *maxAttempts* : `number`
 
 The maximum number of retries before resolving the promise with the last error. Specifying 0 means infinite retries.
 
-*(default: 10)*
-
-- *until* : `(fetchResponse) => boolean`
+- *until* : `(fetchResponse) => boolean | Promise<boolean>`
 
 The request will be retried until that condition is satisfied.
-
-*(default: `response.ok`)*
 
 #### Usage
 
@@ -111,6 +99,16 @@ wretch().middlewares([
         until: response => response.ok
     })
 ])./* ... */
+
+// You can also return a Promise, which is useful if you want to inspect the body:
+wretch().middlewares([
+    retry({
+        until: response =>
+            response.json().then(body =>
+                body.field === 'something'
+            )
+    })
+])
 ```
 
 ## Throttling cache
@@ -123,19 +121,13 @@ wretch().middlewares([
 
 The response will be stored for this amount of time before being deleted from the cache.
 
-*(default: 1000)*
-
 - *skip* : `(url, opts) => boolean`
 
 If skip returns true, then the dedupe check is skipped.
 
-*(default: `opts.skipCache || opts.method !== 'GET'`)*
-
 - *key* : `(url, opts) => string`
 
 Returns a key that is used to identify the request.
-
-*(default: `opts.method + '@' + url`)*
 
 #### Usage
 
