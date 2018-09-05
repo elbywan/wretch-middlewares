@@ -1,6 +1,6 @@
 {
   "name": "wretch-middlewares",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Middlewares for the wretch library",
   "main": "./dist/umd/wretch-middlewares.min.js",
   "module": "./dist/index.js",
@@ -17,7 +17,7 @@
     "dev": "concurrently \"npm run watch\" \"npm run serve\""
   },
   "files": [
-      "dist"
+    "dist"
   ],
   "keywords": [
     "wretch",
@@ -28,12 +28,12 @@
     "middlewares"
   ],
   "homepage": "https://elbywan.github.io/wretch",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/elbywan/wretch-middlewares"
-    },
-    "bugs": {
-        "url": "https://github.com/elbywan/wretch-middlewares/issues"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elbywan/wretch-middlewares"
+  },
+  "bugs": {
+    "url": "https://github.com/elbywan/wretch-middlewares/issues"
   },
   "author": "Julien Elbaz",
   "license": "MIT",
