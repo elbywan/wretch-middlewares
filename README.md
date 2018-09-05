@@ -129,6 +129,22 @@ If skip returns true, then the dedupe check is skipped.
 
 Returns a key that is used to identify the request.
 
+- *clear* `(url, opts) => boolean`
+
+Clears the cache if true.
+
+- *invalidate* `(url, opts) => string | RegExp | Array<string | RegExp> | null`
+
+Removes url(s) matching the string or RegExp from the cache. Can use an array to invalidate multiple values.
+
+- *condition* `response => boolean`
+
+If false then the response will not be added to the cache.
+
+- *flagResponseOnCacheHit* `string`
+
+If set, a Response returned from the cache whill be flagged with a property name equal to this option.
+
 #### Usage
 
 ```js
@@ -140,7 +156,11 @@ wretch().middlewares([
         /* Options - defaults below */
         throttle: 1000,
         skip: opts.skipCache || opts.method !== 'GET',
-        key: (url, opts) => opts.method + '@' + url
+        key: (url, opts) => opts.method + '@' + url,
+        clear: (url, opts) => false,
+        invalidate: (url, opts) => null,
+        condition: response => response.ok,
+        flagResponseOnCacheHit: '__cached'
     })
 ])./* ... */
 ```
