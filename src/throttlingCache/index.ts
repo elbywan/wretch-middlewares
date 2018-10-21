@@ -80,7 +80,14 @@ export const throttlingCache: ThrottlingCacheMiddleware = ({
     const inflight = new Map()
     const throttling = new Set()
 
-    return next => (url, opts) => {
+    const throttleRequest = _key => {
+        if (throttle && !throttling.has(_key)) {
+            throttling.add(_key)
+            setTimeout(() => { throttling.delete(_key) }, throttle)
+        }
+    }
+
+    const middleware = next => (url, opts) => {
         const _key = key(url, opts)
 
         let invalidatePatterns = invalidate(url, opts)
@@ -115,7 +122,7 @@ export const throttlingCache: ThrottlingCacheMiddleware = ({
                 if(flagResponseOnCacheHit) {
                     // Flag the Response as cached
                     Object.defineProperty(cachedClone, flagResponseOnCacheHit, {
-                        value: true,
+                        value: _key,
                         enumerable: false
                     })
                 }
@@ -133,10 +140,7 @@ export const throttlingCache: ThrottlingCacheMiddleware = ({
             inflight.set(_key, [])
 
         // If we are not throttling, activate the throttle for X milliseconds
-        if (throttle && !throttling.has(_key)) {
-            throttling.add(_key)
-            setTimeout(() => { throttling.delete(_key) }, throttle)
-        }
+        throttleRequest(_key)
 
         // We call the next middleware in the chain.
         return next(url, opts)
@@ -159,4 +163,12 @@ export const throttlingCache: ThrottlingCacheMiddleware = ({
                 throw error
             })
     }
+
+    // Programmatically cache a response
+    middleware['cache'] = function(key, response) {
+        throttleRequest(key)
+        cache.set(key, response)
+    }
+
+    return middleware
 }
