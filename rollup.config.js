@@ -7,8 +7,7 @@ export default {
         file: "dist/umd/wretch-middlewares.min.js",
         format: "umd",
         name: "wretchMiddlewares",
-        sourcemap: true,
-        inlineSources: true
+        sourcemap: true
     },
     plugins: [
         typescript({
