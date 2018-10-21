@@ -1,4 +1,4 @@
-import { ConfiguredMiddleware } from 'wretch/dist/middleware'
+import { ConfiguredMiddleware, WretcherOptions, Wretcher } from 'wretch'
 
 /* Types */
 

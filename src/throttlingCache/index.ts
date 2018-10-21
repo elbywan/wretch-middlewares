@@ -1,6 +1,4 @@
-import { WretcherOptions } from 'wretch/dist/wretcher'
-import { WretcherResponse } from 'wretch/dist/resolver'
-import { ConfiguredMiddleware } from 'wretch/dist/middleware'
+import { WretcherOptions, WretcherResponse, ConfiguredMiddleware } from 'wretch'
 
 /* Types */
 
