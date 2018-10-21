@@ -84,6 +84,10 @@ The maximum number of retries before resolving the promise with the last error. 
 
 The request will be retried until that condition is satisfied.
 
+- *onRetry* `({ response, url, options }) => { url?, options? } || Promise<{url?, options?}>`
+
+Callback that will et executed before retrying the request. If this function returns an object having url and/or options properties, they will override existing values in the retried request.
+
 #### Usage
 
 ```js
@@ -96,7 +100,8 @@ wretch().middlewares([
         delayTimer: 500,
         delayRamp: (delay, nbOfAttempts) => delay * nbOfAttempts
         maxAttempts: 10,
-        until: response => response.ok
+        until: response => response.ok,
+        onRetry: null
     })
 ])./* ... */
 

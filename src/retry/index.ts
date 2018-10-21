@@ -4,11 +4,16 @@ import { ConfiguredMiddleware, WretcherOptions, Wretcher } from 'wretch'
 
 export type DelayRampFunction = (delay: number, nbOfAttempts: number) => number
 export type UntilFunction = (response: Response) => boolean | Promise<boolean>
+export type OnRetryFunction = (args: { response: Response, url: string, options: WretcherOptions }) => ({
+    url?: string,
+    options?: WretcherOptions
+})
 export type RetryOptions = {
     delayTimer?: number,
     delayRamp?: DelayRampFunction,
     maxAttempts?: number,
-    until?: UntilFunction
+    until?: UntilFunction,
+    onRetry?: OnRetryFunction
 }
 export type RetryMiddleware = (options?: RetryOptions) => ConfiguredMiddleware
 
@@ -49,12 +54,19 @@ const defaultUntil = response => response.ok
  * > The request will be retried until that condition is satisfied.
  *
  * *(default: response.ok)*
+ *
+ * - *onRetry* `({ response, url, options }) => { url?, options? } || Promise<{url?, options?}>`
+ *
+ * > Callback that will et executed before retrying the request. If this function returns an object having url and/or options properties, they will override existing values in the retried request.
+ *
+ * *(default: null)*
  */
 export const retry: RetryMiddleware = ({
     delayTimer = 500,
     delayRamp = defaultDelayRamp,
     maxAttempts = 10,
-    until = defaultUntil
+    until = defaultUntil,
+    onRetry = null
 } = {}) => {
 
     return next => (url, opts) => {
@@ -71,7 +83,17 @@ export const retry: RetryMiddleware = ({
                         return new Promise(resolve => {
                             const delay = defaultDelayRamp(delayTimer, numberOfAttemptsMade)
                             setTimeout(() => {
-                                resolve(next(url, opts))
+                                if(typeof onRetry === 'function') {
+                                    Promise.resolve(onRetry({
+                                        response: response.clone(),
+                                        url,
+                                        options: opts
+                                    })).then((values = {}) => {
+                                        resolve(next(values.url || url, values.options || opts))
+                                    })
+                                } else {
+                                    resolve(next(url, opts))
+                                }
                             }, delay)
                         }).then(checkStatus)
                     }
