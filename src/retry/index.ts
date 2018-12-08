@@ -3,8 +3,8 @@ import { ConfiguredMiddleware, WretcherOptions, Wretcher } from 'wretch'
 /* Types */
 
 export type DelayRampFunction = (delay: number, nbOfAttempts: number) => number
-export type UntilFunction = (response: Response) => boolean | Promise<boolean>
-export type OnRetryFunction = (args: { response: Response, url: string, options: WretcherOptions }) => ({
+export type UntilFunction = (response?: Response, error?: Error) => boolean | Promise<boolean>
+export type OnRetryFunction = (args: { response?: Response, error?: Error, url: string, options: WretcherOptions }) => ({
     url?: string,
     options?: WretcherOptions
 })
@@ -13,7 +13,8 @@ export type RetryOptions = {
     delayRamp?: DelayRampFunction,
     maxAttempts?: number,
     until?: UntilFunction,
-    onRetry?: OnRetryFunction
+    onRetry?: OnRetryFunction,
+    retryOnNetworkError?: boolean
 }
 export type RetryMiddleware = (options?: RetryOptions) => ConfiguredMiddleware
 
@@ -22,7 +23,7 @@ export type RetryMiddleware = (options?: RetryOptions) => ConfiguredMiddleware
 const defaultDelayRamp = (delay, nbOfAttempts) => (
     delay * nbOfAttempts
 )
-const defaultUntil = response => response.ok
+const defaultUntil = (response, error) => response && response.ok
 
 /**
  * ## Retry middleware
@@ -49,31 +50,38 @@ const defaultUntil = response => response.ok
  *
  * *(default: 10)*
  *
- * - *until* `(fetch response) => boolean || Promise<boolean>`
+ * - *until* `(fetch response, error) => boolean || Promise<boolean>`
  *
  * > The request will be retried until that condition is satisfied.
  *
- * *(default: response.ok)*
+ * *(default: response && response.ok)*
  *
- * - *onRetry* `({ response, url, options }) => { url?, options? } || Promise<{url?, options?}>`
+ * - *onRetry* `({ response, error, url, options }) => { url?, options? } || Promise<{url?, options?}>`
  *
- * > Callback that will et executed before retrying the request. If this function returns an object having url and/or options properties, they will override existing values in the retried request.
+ * > Callback that will get executed before retrying the request. If this function returns an object having url and/or options properties, they will override existing values in the retried request.
  *
  * *(default: null)*
+ *
+ * - *retryOnNetworkError* : `boolean`
+ *
+ * > If true, will retry the request if a network error was thrown. Will also provide an 'error' argument to the `onRetry` and `until` methods.
+ *
+ * *(default: false)*
  */
 export const retry: RetryMiddleware = ({
     delayTimer = 500,
     delayRamp = defaultDelayRamp,
     maxAttempts = 10,
     until = defaultUntil,
-    onRetry = null
+    onRetry = null,
+    retryOnNetworkError = false
 } = {}) => {
 
     return next => (url, opts) => {
         let numberOfAttemptsMade = 0
 
-        const checkStatus = response => {
-            return Promise.resolve(until(response.clone())).then(done => {
+        const checkStatus = (response?: Response, error?: Error) => {
+            return Promise.resolve(until(response && response.clone(), error)).then(done => {
                  // If the response is unexpected
                 if(!done) {
                     numberOfAttemptsMade++
@@ -85,7 +93,8 @@ export const retry: RetryMiddleware = ({
                             setTimeout(() => {
                                 if(typeof onRetry === 'function') {
                                     Promise.resolve(onRetry({
-                                        response: response.clone(),
+                                        response: response && response.clone(),
+                                        error,
                                         url,
                                         options: opts
                                     })).then((values = {}) => {
@@ -95,7 +104,13 @@ export const retry: RetryMiddleware = ({
                                     resolve(next(url, opts))
                                 }
                             }, delay)
-                        }).then(checkStatus)
+                        }).then(checkStatus).catch(error => {
+                            if(!retryOnNetworkError)
+                                throw error
+                            checkStatus(null, error)
+                        })
+                    } else {
+                        return Promise.reject('Number of attempts exceeded.')
                     }
                 }
 
@@ -103,7 +118,12 @@ export const retry: RetryMiddleware = ({
             })
         }
 
-        // Willingly omitted .catch which prevents handling network errors and should throw
-        return next(url, opts).then(checkStatus)
+        return next(url, opts)
+            .then(checkStatus)
+            .catch(error => {
+                if(!retryOnNetworkError)
+                    throw error
+                checkStatus(null, error)
+            })
     }
 }

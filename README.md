@@ -80,13 +80,17 @@ The custom function that is used to calculate the actual delay based on the the 
 
 The maximum number of retries before resolving the promise with the last error. Specifying 0 means infinite retries.
 
-- *until* : `(fetchResponse) => boolean | Promise<boolean>`
+- *until* : `(fetchResponse, error) => boolean | Promise<boolean>`
 
 The request will be retried until that condition is satisfied.
 
-- *onRetry* `({ response, url, options }) => { url?, options? } || Promise<{url?, options?}>`
+- *onRetry* : `({ response, error, url, options }) => { url?, options? } || Promise<{url?, options?}>`
 
-Callback that will et executed before retrying the request. If this function returns an object having url and/or options properties, they will override existing values in the retried request.
+Callback that will get executed before retrying the request. If this function returns an object having url and/or options properties, they will override existing values in the retried request. If it returns a Promise, it will be awaited before retrying the request.
+
+- *retryOnNetworkError* : `boolean`
+
+If true, will retry the request if a network error was thrown. Will also provide an 'error' argument to the `onRetry` and `until` methods.
 
 #### Usage
 
@@ -100,8 +104,9 @@ wretch().middlewares([
         delayTimer: 500,
         delayRamp: (delay, nbOfAttempts) => delay * nbOfAttempts
         maxAttempts: 10,
-        until: response => response.ok,
-        onRetry: null
+        until: (response, error) => response && response.ok,
+        onRetry: null,
+        retryOnNetworkError: false
     })
 ])./* ... */
 
