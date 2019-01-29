@@ -82,14 +82,14 @@ export const retry: RetryMiddleware = ({
 
         const checkStatus = (response?: Response, error?: Error) => {
             return Promise.resolve(until(response && response.clone(), error)).then(done => {
-                 // If the response is unexpected
+                // If the response is unexpected
                 if(!done) {
                     numberOfAttemptsMade++
 
                     if (!maxAttempts || numberOfAttemptsMade <= maxAttempts) {
                         // We need to recurse until we have a correct response and chain the checks
                         return new Promise(resolve => {
-                            const delay = defaultDelayRamp(delayTimer, numberOfAttemptsMade)
+                            const delay = delayRamp(delayTimer, numberOfAttemptsMade)
                             setTimeout(() => {
                                 if(typeof onRetry === 'function') {
                                     Promise.resolve(onRetry({
