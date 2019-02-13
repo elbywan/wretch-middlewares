@@ -4,10 +4,13 @@ import { ConfiguredMiddleware, WretcherOptions, Wretcher } from 'wretch'
 
 export type DelayRampFunction = (delay: number, nbOfAttempts: number) => number
 export type UntilFunction = (response?: Response, error?: Error) => boolean | Promise<boolean>
-export type OnRetryFunction = (args: { response?: Response, error?: Error, url: string, options: WretcherOptions }) => ({
-    url?: string,
-    options?: WretcherOptions
-})
+export type OnRetryFunctionResponse = { url?: string; options?: WretcherOptions } | undefined
+export type OnRetryFunction = (args: { 
+    response?: Response, 
+    error?: Error, 
+    url: string, 
+    options: WretcherOptions 
+}) => OnRetryFunctionResponse | Promise<OnRetryFunctionResponse>
 export type RetryOptions = {
     delayTimer?: number,
     delayRamp?: DelayRampFunction,
