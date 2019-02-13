@@ -8,7 +8,7 @@
   <a href="https://github.com/elbywan/wretch-middlewares/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license-badge" height="20"></a>
 </h1>
 <h4 align="center">
-	A collection of <a href="https://github.com/elbywan/wretch#middlewares" target="_blank">middlewares</a> for the <a href="https://github.com/wretch" target="_blank">Wretch</a> library.
+	A collection of <a href="https://github.com/elbywan/wretch#middlewares" target="_blank">middlewares</a> for the <a href="https://github.com/elbywan/wretch" target="_blank">Wretch</a> library.
 </h4>
 
 # Installation
