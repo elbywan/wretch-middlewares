@@ -165,7 +165,7 @@ wretch().middlewares([
     throttlingCache({
         /* Options - defaults below */
         throttle: 1000,
-        skip: opts.skipCache || opts.method !== 'GET',
+        skip: (url, opts) => opts.skipCache || opts.method !== 'GET',
         key: (url, opts) => opts.method + '@' + url,
         clear: (url, opts) => false,
         invalidate: (url, opts) => null,
