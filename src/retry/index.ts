@@ -117,7 +117,7 @@ export const retry: RetryMiddleware = ({
                     }
                 }
 
-                return response
+                return error ? Promise.reject(error) : response
             })
         }
 
@@ -126,7 +126,7 @@ export const retry: RetryMiddleware = ({
             .catch(error => {
                 if(!retryOnNetworkError)
                     throw error
-                checkStatus(null, error)
+                return checkStatus(null, error)
             })
     }
 }
