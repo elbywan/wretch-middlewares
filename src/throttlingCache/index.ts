@@ -163,7 +163,7 @@ export const throttlingCache: ThrottlingCacheMiddleware = ({
     }
 
     // Programmatically cache a response
-    middleware['cache'] = function(key, response) {
+    middleware['cache'] = function (key, response) {
         throttleRequest(key)
         cache.set(key, response)
     }
