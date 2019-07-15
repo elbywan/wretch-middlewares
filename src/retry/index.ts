@@ -113,7 +113,7 @@ export const retry: RetryMiddleware = ({
                             checkStatus(null, error)
                         })
                     } else {
-                        return Promise.reject('Number of attempts exceeded.')
+                        return Promise.reject(new Error('Number of attempts exceeded.'))
                     }
                 }
 
