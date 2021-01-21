@@ -30,16 +30,26 @@ export const rateLimit: RateLimitMiddleware = (reqsPerSecond) => {
     opts: WretcherOptions;
   }[] = [];
 
-  // We use interval vs. setTimeout because more than one request can be in-flight, it just can't start until x time has passed.
-  setInterval(() => {
-    if (QUEUE.length > 0) {
-      const queueItem = QUEUE.shift();
-      if (!queueItem) {
-        return;
-      }
-      queueItem.res(queueItem.next(queueItem.url, queueItem.opts));
+  let timeoutHandle: number | undefined;
+
+  const executeTimeoutLoop = () => {
+    // Only keep one open handle active at a time, and let it GC when the queue is empty
+    // If a handle doesn't exist, start the loop
+    if (!timeoutHandle) {
+      timeoutHandle = setTimeout(() => {
+        if (QUEUE.length > 0) {
+          const queueItem = QUEUE.shift();
+          if (!queueItem) {
+            return;
+          }
+          queueItem.res(queueItem.next(queueItem.url, queueItem.opts));
+          executeTimeoutLoop();
+        } else {
+          timeoutHandle = undefined;
+        }
+      }, (1 / reqsPerSecond) * 1000);
     }
-  }, (1 / reqsPerSecond) * 1000);
+  };
 
   return (next) => (url, opts) => {
     return new Promise((res) => {
@@ -50,6 +60,7 @@ export const rateLimit: RateLimitMiddleware = (reqsPerSecond) => {
         opts,
       };
       QUEUE.push(waiter);
+      executeTimeoutLoop();
     });
   };
 };
