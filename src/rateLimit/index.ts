@@ -35,7 +35,7 @@ export const rateLimit: RateLimitMiddleware = (reqsPerSecond) => {
   const executeTimeoutLoop = () => {
     // Only keep one open handle active at a time, and let it GC when the queue is empty
     // If a handle doesn't exist, start the loop
-    if (!timeoutHandle) {
+    const executeLoop = () => {
       timeoutHandle = setTimeout(() => {
         if (QUEUE.length > 0) {
           const queueItem = QUEUE.shift();
@@ -43,11 +43,14 @@ export const rateLimit: RateLimitMiddleware = (reqsPerSecond) => {
             return;
           }
           queueItem.res(queueItem.next(queueItem.url, queueItem.opts));
-          executeTimeoutLoop();
+          executeLoop();
         } else {
           timeoutHandle = undefined;
         }
       }, (1 / reqsPerSecond) * 1000);
+    };
+    if (!timeoutHandle) {
+      executeLoop();
     }
   };
 
