@@ -33,19 +33,19 @@ const defaultKey = (url, opts) => opts.method + '@' + url
  * > Returns a key that is used to identify the request.
  *
  */
-export const dedupe: DedupeMiddleware = ({ skip = defaultSkip,  key = defaultKey } = {}) => {
+export const dedupe: DedupeMiddleware = ({ skip = defaultSkip, key = defaultKey } = {}) => {
 
     const inflight = new Map()
 
     return next => (url, opts) => {
 
-        if(skip(url, opts)) {
+        if (skip(url, opts)) {
             return next(url, opts)
         }
 
         const _key = key(url, opts)
 
-        if(!inflight.has(_key)) {
+        if (!inflight.has(_key)) {
             inflight.set(_key, [])
         } else {
             return new Promise((resolve, reject) => {
@@ -53,20 +53,26 @@ export const dedupe: DedupeMiddleware = ({ skip = defaultSkip,  key = defaultKey
             })
         }
 
-        return next(url, opts)
-            .then(response => {
-                // Resolve pending promises
-                inflight.get(_key).forEach(([resolve]) => resolve(response.clone()))
-                // Remove the inflight pending promises
-                inflight.delete(_key)
-                // Return the original response
-                return response
-            })
-            .catch(error => {
-                // Reject pending promises on error
-                inflight.get(_key).forEach(([resolve, reject]) => reject(error))
-                inflight.delete(_key)
-                throw error
-            })
+        try {
+            return next(url, opts)
+                .then(response => {
+                    // Resolve pending promises
+                    inflight.get(_key).forEach(([resolve]) => resolve(response.clone()))
+                    // Remove the inflight pending promises
+                    inflight.delete(_key)
+                    // Return the original response
+                    return response
+                })
+                .catch(error => {
+                    // Reject pending promises on error
+                    inflight.get(_key).forEach(([resolve, reject]) => reject(error))
+                    inflight.delete(_key)
+                    throw error
+                })
+        } catch (error) {
+            inflight.delete(_key)
+            return Promise.reject(error)
+        }
+
     }
 }
