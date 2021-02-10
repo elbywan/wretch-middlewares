@@ -1,6 +1,6 @@
 {
   "name": "wretch-middlewares",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Middlewares for the wretch library",
   "main": "./dist/umd/wretch-middlewares.min.js",
   "module": "./dist/index.js",
