@@ -102,7 +102,7 @@ wretch().middlewares([
     retry({
         /* Options - defaults below */
         delayTimer: 500,
-        delayRamp: (delay, nbOfAttempts) => delay * nbOfAttempts
+        delayRamp: (delay, nbOfAttempts) => delay * nbOfAttempts,
         maxAttempts: 10,
         until: (response, error) => response && response.ok,
         onRetry: null,
