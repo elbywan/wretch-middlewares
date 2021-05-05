@@ -30,8 +30,8 @@ npm i wretch-middlewares
 
 # Middlewares
 
-| [Dedupe](#dedupe) | [Retry](#retry) | [Throttling cache](#throttling-cache) | [Delay](#delay) |
-|-----|-----|-----|-----|
+| [Dedupe](#dedupe) | [Retry](#retry) | [Throttling cache](#throttling-cache) | [Delay](#delay) | [Rate limit](#rate-limit) |
+|-----|-----|-----|-----|-----|
 
 ## Dedupe
 
@@ -193,5 +193,26 @@ import { delay } from 'wretch-middlewares'
 
 wretch().middlewares([
     delay(1000)
+])./* ... */
+```
+
+## Rate limit
+
+**Restricts outbound requests to a specific rate limit, storing extra requests in a temporary in-memory queue.**
+
+#### Options
+
+- *reqsPerSecond* : `float`
+
+Throttle outbound requests to reqsPerSecond/sec
+
+#### Usage
+
+```js
+import wretch from 'wretch'
+import { rateLimit } from 'wretch-middlewares'
+
+wretch().middlewares([
+    rateLimit(1.5) // ensure 1.5 requests per second maximum
 ])./* ... */
 ```
