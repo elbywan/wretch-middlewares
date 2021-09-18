@@ -1,5 +1,5 @@
 import typescript from "rollup-plugin-typescript"
-import { uglify } from "rollup-plugin-uglify"
+import { terser } from "rollup-plugin-terser"
 
 export default {
     input: "./src/index.ts",
@@ -14,7 +14,7 @@ export default {
             typescript: require("typescript"),
             importHelpers: true
         }),
-        uglify()
+        terser()
     ],
     external: [ "wretch" ]
 }
