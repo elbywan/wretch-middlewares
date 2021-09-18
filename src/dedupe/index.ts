@@ -4,18 +4,21 @@ import { ConfiguredMiddleware, WretcherOptions } from 'wretch'
 
 export type DedupeSkipFunction = (url: string, opts: WretcherOptions) => boolean
 export type DedupeKeyFunction = (url: string, opts: WretcherOptions) => string
+export type DedupeResolverFunction = (response: Response) => Response
 export type DedupeOptions = {
     skip?: DedupeSkipFunction,
-    key?: DedupeKeyFunction
+    key?: DedupeKeyFunction,
+    resolver?: DedupeResolverFunction
 }
 export type DedupeMiddleware = (options?: DedupeOptions) => ConfiguredMiddleware
 
 /* Defaults */
 
-const defaultSkip = (url, opts) => (
+const defaultSkip : DedupeSkipFunction = (_, opts) => (
     opts.skipDedupe || opts.method !== 'GET'
 )
-const defaultKey = (url, opts) => opts.method + '@' + url
+const defaultKey : DedupeKeyFunction = (url: string, opts) => opts.method + '@' + url
+const defaultResolver : DedupeResolverFunction = response => response.clone()
 
 /**
  * ## Dedupe middleware
@@ -24,16 +27,20 @@ const defaultKey = (url, opts) => opts.method + '@' + url
  *
  * **Options**
  *
- * - *skip* `function(url, opts) => boolean`
+ * - *skip* `(url, opts) => boolean`
  *
  * > If skip returns true, then the dedupe check is skipped.
  *
- * - *key* `function(url, opts) => string`
+ * - *key* `(url, opts) => string`
  *
  * > Returns a key that is used to identify the request.
  *
+ * - *resolver* `(response: Response) => Response`
+ *
+ * > This function is called when resolving the fetch response from duplicate calls.
+ * By default it clones the response to allow reading the body from multiple sources.
  */
-export const dedupe: DedupeMiddleware = ({ skip = defaultSkip, key = defaultKey } = {}) => {
+export const dedupe: DedupeMiddleware = ({ skip = defaultSkip, key = defaultKey, resolver = defaultResolver } = {}) => {
 
     const inflight = new Map()
 
@@ -57,7 +64,7 @@ export const dedupe: DedupeMiddleware = ({ skip = defaultSkip, key = defaultKey 
             return next(url, opts)
                 .then(response => {
                     // Resolve pending promises
-                    inflight.get(_key).forEach(([resolve]) => resolve(response.clone()))
+                    inflight.get(_key).forEach(([resolve]) => resolve(resolver(response)))
                     // Remove the inflight pending promises
                     inflight.delete(_key)
                     // Return the original response

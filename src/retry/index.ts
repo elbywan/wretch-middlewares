@@ -1,4 +1,4 @@
-import { ConfiguredMiddleware, WretcherOptions, Wretcher } from 'wretch'
+import { ConfiguredMiddleware, WretcherOptions } from 'wretch'
 
 /* Types */
 
@@ -11,22 +11,25 @@ export type OnRetryFunction = (args: {
     url: string,
     options: WretcherOptions
 }) => OnRetryFunctionResponse | Promise<OnRetryFunctionResponse>
+export type ResolverFunction = (response: Response) => Response
 export type RetryOptions = {
     delayTimer?: number,
     delayRamp?: DelayRampFunction,
     maxAttempts?: number,
     until?: UntilFunction,
     onRetry?: OnRetryFunction,
-    retryOnNetworkError?: boolean
+    retryOnNetworkError?: boolean,
+    resolver?: ResolverFunction
 }
 export type RetryMiddleware = (options?: RetryOptions) => ConfiguredMiddleware
 
 /* Defaults */
 
-const defaultDelayRamp = (delay, nbOfAttempts) => (
+const defaultDelayRamp : DelayRampFunction = (delay, nbOfAttempts) => (
     delay * nbOfAttempts
 )
-const defaultUntil = (response, error) => response && response.ok
+const defaultUntil : UntilFunction = response => response && response.ok
+const defaultResolver : ResolverFunction = response => response.clone()
 
 /**
  * ## Retry middleware
@@ -39,37 +42,44 @@ const defaultUntil = (response, error) => response && response.ok
  *
  * > The timer between each attempt.
  *
- * *(default: 500)*
+ * > *(default: 500)*
  *
  * - *delayRamp* `(delay, nbOfAttempts) => milliseconds`
  *
  * > The custom function that is used to calculate the actual delay based on the the timer & the number of attemps.
  *
- * *(default: delay * nbOfAttemps)*
+ * > *(default: delay * nbOfAttemps)*
  *
  * - *maxAttempts* `number`
  *
  * > The maximum number of retries before resolving the promise with the last error. Specifying 0 means infinite retries.
  *
- * *(default: 10)*
+ * > *(default: 10)*
  *
- * - *until* `(fetch response, error) => boolean || Promise<boolean>`
+ * - *until* `(response, error) => boolean || Promise<boolean>`
  *
  * > The request will be retried until that condition is satisfied.
  *
- * *(default: response && response.ok)*
+ * > *(default: response && response.ok)*
  *
  * - *onRetry* `({ response, error, url, options }) => { url?, options? } || Promise<{url?, options?}>`
  *
  * > Callback that will get executed before retrying the request. If this function returns an object having url and/or options properties, they will override existing values in the retried request.
  *
- * *(default: null)*
+ * > *(default: null)*
  *
- * - *retryOnNetworkError* : `boolean`
+ * - *retryOnNetworkError* `boolean`
  *
  * > If true, will retry the request if a network error was thrown. Will also provide an 'error' argument to the `onRetry` and `until` methods.
  *
- * *(default: false)*
+ * > *(default: false)*
+ *
+ * - *resolver* `(response: Response) => Response`
+ *
+ * > This function is called when resolving the fetch response from duplicate calls.
+ * By default it clones the response to allow reading the body from multiple sources.
+ *
+ * > *(default: response => response.clone())*
  */
 export const retry: RetryMiddleware = ({
     delayTimer = 500,
@@ -77,7 +87,8 @@ export const retry: RetryMiddleware = ({
     maxAttempts = 10,
     until = defaultUntil,
     onRetry = null,
-    retryOnNetworkError = false
+    retryOnNetworkError = false,
+    resolver = defaultResolver
 } = {}) => {
 
     return next => (url, opts) => {
@@ -96,7 +107,7 @@ export const retry: RetryMiddleware = ({
                             setTimeout(() => {
                                 if(typeof onRetry === 'function') {
                                     Promise.resolve(onRetry({
-                                        response: response && response.clone(),
+                                        response: response && resolver(response),
                                         error,
                                         url,
                                         options: opts
