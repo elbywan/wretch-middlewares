@@ -47,17 +47,23 @@ If skip returns true, then the dedupe check is skipped.
 
 Returns a key that is used to identify the request.
 
+- *resolver* : `(response: Response) => Response`
+
+This function is called when resolving the fetch response from duplicate calls.
+By default it clones the response to allow reading the body from multiple sources.
+
 #### Usage
 
 ```js
 import wretch from 'wretch'
-import { dedupe } from 'wretch-middlewares'
+import { dedupe } from 'wretch-middlewares'
 
 wretch().middlewares([
     dedupe({
         /* Options - defaults below */
         skip: (url, opts) => opts.skipDedupe || opts.method !== 'GET',
-        key: (url, opts) => opts.method + '@' + url
+        key: (url, opts) => opts.method + '@' + url,
+        resolver: response => response.clone()
     })
 ])./* ... */
 ```
@@ -92,6 +98,11 @@ Callback that will get executed before retrying the request. If this function re
 
 If true, will retry the request if a network error was thrown. Will also provide an 'error' argument to the `onRetry` and `until` methods.
 
+- *resolver* : `(response: Response) => Response`
+
+This function is called when resolving the fetch response from duplicate calls.
+By default it clones the response to allow reading the body from multiple sources.
+
 #### Usage
 
 ```js
@@ -106,7 +117,8 @@ wretch().middlewares([
         maxAttempts: 10,
         until: (response, error) => response && response.ok,
         onRetry: null,
-        retryOnNetworkError: false
+        retryOnNetworkError: false,
+        resolver: response => response.clone()
     })
 ])./* ... */
 
