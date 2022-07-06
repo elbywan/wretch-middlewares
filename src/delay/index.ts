@@ -16,5 +16,5 @@ export type DelayMiddleware = (time: number) => ConfiguredMiddleware
  * > The request will be delayed by that amount of time.
  */
 export const delay: DelayMiddleware = time => next => (url, opts) => {
-    return new Promise(res => setTimeout(() => res(next(url, opts)), time))
+  return new Promise(res => setTimeout(() => res(next(url, opts)), time))
 }

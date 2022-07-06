@@ -1,35 +1,35 @@
-import { ConfiguredMiddleware, WretcherOptions } from 'wretch'
+import { ConfiguredMiddleware, WretchOptions } from 'wretch'
 
 /* Types */
 
 export type DelayRampFunction = (delay: number, nbOfAttempts: number) => number
 export type UntilFunction = (response?: Response, error?: Error) => boolean | Promise<boolean>
-export type OnRetryFunctionResponse = { url?: string; options?: WretcherOptions } | undefined
+export type OnRetryFunctionResponse = { url?: string; options?: WretchOptions } | undefined
 export type OnRetryFunction = (args: {
-    response?: Response,
-    error?: Error,
-    url: string,
-    options: WretcherOptions
+  response?: Response,
+  error?: Error,
+  url: string,
+  options: WretchOptions
 }) => OnRetryFunctionResponse | Promise<OnRetryFunctionResponse>
 export type ResolverFunction = (response: Response) => Response
 export type RetryOptions = {
-    delayTimer?: number,
-    delayRamp?: DelayRampFunction,
-    maxAttempts?: number,
-    until?: UntilFunction,
-    onRetry?: OnRetryFunction,
-    retryOnNetworkError?: boolean,
-    resolver?: ResolverFunction
+  delayTimer?: number,
+  delayRamp?: DelayRampFunction,
+  maxAttempts?: number,
+  until?: UntilFunction,
+  onRetry?: OnRetryFunction,
+  retryOnNetworkError?: boolean,
+  resolver?: ResolverFunction
 }
 export type RetryMiddleware = (options?: RetryOptions) => ConfiguredMiddleware
 
 /* Defaults */
 
-const defaultDelayRamp : DelayRampFunction = (delay, nbOfAttempts) => (
-    delay * nbOfAttempts
+const defaultDelayRamp: DelayRampFunction = (delay, nbOfAttempts) => (
+  delay * nbOfAttempts
 )
-const defaultUntil : UntilFunction = response => response && response.ok
-const defaultResolver : ResolverFunction = response => response.clone()
+const defaultUntil: UntilFunction = response => response && response.ok
+const defaultResolver: ResolverFunction = response => response.clone()
 
 /**
  * ## Retry middleware
@@ -82,62 +82,62 @@ const defaultResolver : ResolverFunction = response => response.clone()
  * > *(default: response => response.clone())*
  */
 export const retry: RetryMiddleware = ({
-    delayTimer = 500,
-    delayRamp = defaultDelayRamp,
-    maxAttempts = 10,
-    until = defaultUntil,
-    onRetry = null,
-    retryOnNetworkError = false,
-    resolver = defaultResolver
+  delayTimer = 500,
+  delayRamp = defaultDelayRamp,
+  maxAttempts = 10,
+  until = defaultUntil,
+  onRetry = null,
+  retryOnNetworkError = false,
+  resolver = defaultResolver
 } = {}) => {
 
-    return next => (url, opts) => {
-        let numberOfAttemptsMade = 0
+  return next => (url, opts) => {
+    let numberOfAttemptsMade = 0
 
-        const checkStatus = (response?: Response, error?: Error) => {
-            return Promise.resolve(until(response && response.clone(), error)).then(done => {
-                // If the response is unexpected
-                if(!done) {
-                    numberOfAttemptsMade++
+    const checkStatus = (response?: Response, error?: Error) => {
+      return Promise.resolve(until(response && response.clone(), error)).then(done => {
+        // If the response is unexpected
+        if (!done) {
+          numberOfAttemptsMade++
 
-                    if (!maxAttempts || numberOfAttemptsMade <= maxAttempts) {
-                        // We need to recurse until we have a correct response and chain the checks
-                        return new Promise(resolve => {
-                            const delay = delayRamp(delayTimer, numberOfAttemptsMade)
-                            setTimeout(() => {
-                                if(typeof onRetry === 'function') {
-                                    Promise.resolve(onRetry({
-                                        response: response && resolver(response),
-                                        error,
-                                        url,
-                                        options: opts
-                                    })).then((values = {}) => {
-                                        resolve(next(values.url || url, values.options || opts))
-                                    })
-                                } else {
-                                    resolve(next(url, opts))
-                                }
-                            }, delay)
-                        }).then(checkStatus).catch(error => {
-                            if(!retryOnNetworkError)
-                                throw error
-                            return checkStatus(null, error)
-                        })
-                    } else {
-                        return Promise.reject(error || new Error('Number of attempts exceeded.'))
-                    }
+          if (!maxAttempts || numberOfAttemptsMade <= maxAttempts) {
+            // We need to recurse until we have a correct response and chain the checks
+            return new Promise(resolve => {
+              const delay = delayRamp(delayTimer, numberOfAttemptsMade)
+              setTimeout(() => {
+                if (typeof onRetry === 'function') {
+                  Promise.resolve(onRetry({
+                    response: response && resolver(response),
+                    error,
+                    url,
+                    options: opts
+                  })).then((values = {}) => {
+                    resolve(next(values.url || url, values.options || opts))
+                  })
+                } else {
+                  resolve(next(url, opts))
                 }
-
-                return error ? Promise.reject(error) : response
+              }, delay)
+            }).then(checkStatus).catch(error => {
+              if (!retryOnNetworkError)
+                throw error
+              return checkStatus(null, error)
             })
+          } else {
+            return Promise.reject(error || new Error('Number of attempts exceeded.'))
+          }
         }
 
-        return next(url, opts)
-            .then(checkStatus)
-            .catch(error => {
-                if(!retryOnNetworkError)
-                    throw error
-                return checkStatus(null, error)
-            })
+        return error ? Promise.reject(error) : response
+      })
     }
+
+    return next(url, opts)
+      .then(checkStatus)
+      .catch(error => {
+        if (!retryOnNetworkError)
+          throw error
+        return checkStatus(null, error)
+      })
+  }
 }

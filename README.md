@@ -15,10 +15,10 @@
 
 ### Prerequisite: [install Wretch](https://github.com/elbywan/wretch#installation)
 
-## Npm
+## Package
 
 ```sh
-npm i wretch-middlewares
+npm i wretch-middlewares # or yarn/pnpm add wretch-middlewares
 ```
 
 ## Cdn
@@ -30,8 +30,8 @@ npm i wretch-middlewares
 
 # Middlewares
 
-| [Dedupe](#dedupe) | [Retry](#retry) | [Throttling cache](#throttling-cache) | [Delay](#delay) |
-|-----|-----|-----|-----|
+| [Dedupe](#dedupe) | [Retry](#retry) | [Throttling cache](#throttling-cache) | [Delay](#delay) |
+| ----------------- | --------------- | ------------------------------------- | --------------- |
 
 ## Dedupe
 
@@ -59,12 +59,12 @@ import wretch from 'wretch'
 import { dedupe } from 'wretch-middlewares'
 
 wretch().middlewares([
-    dedupe({
-        /* Options - defaults below */
-        skip: (url, opts) => opts.skipDedupe || opts.method !== 'GET',
-        key: (url, opts) => opts.method + '@' + url,
-        resolver: response => response.clone()
-    })
+  dedupe({
+    /* Options - defaults below */
+    skip: (url, opts) => opts.skipDedupe || opts.method !== 'GET',
+    key: (url, opts) => opts.method + '@' + url,
+    resolver: response => response.clone()
+  })
 ])./* ... */
 ```
 
@@ -110,26 +110,26 @@ import wretch from 'wretch'
 import { retry } from 'wretch-middlewares'
 
 wretch().middlewares([
-    retry({
-        /* Options - defaults below */
-        delayTimer: 500,
-        delayRamp: (delay, nbOfAttempts) => delay * nbOfAttempts,
-        maxAttempts: 10,
-        until: (response, error) => response && response.ok,
-        onRetry: null,
-        retryOnNetworkError: false,
-        resolver: response => response.clone()
-    })
+  retry({
+    /* Options - defaults below */
+    delayTimer: 500,
+    delayRamp: (delay, nbOfAttempts) => delay * nbOfAttempts,
+    maxAttempts: 10,
+    until: (response, error) => response && response.ok,
+    onRetry: null,
+    retryOnNetworkError: false,
+    resolver: response => response.clone()
+  })
 ])./* ... */
 
 // You can also return a Promise, which is useful if you want to inspect the body:
 wretch().middlewares([
-    retry({
-        until: response =>
-            response.json().then(body =>
-                body.field === 'something'
-            )
-    })
+  retry({
+    until: response =>
+      response.json().then(body =>
+        body.field === 'something'
+      )
+  })
 ])
 ```
 
@@ -174,16 +174,16 @@ import wretch from 'wretch'
 import { throttlingCache } from 'wretch-middlewares'
 
 wretch().middlewares([
-    throttlingCache({
-        /* Options - defaults below */
-        throttle: 1000,
-        skip: (url, opts) => opts.skipCache || opts.method !== 'GET',
-        key: (url, opts) => opts.method + '@' + url,
-        clear: (url, opts) => false,
-        invalidate: (url, opts) => null,
-        condition: response => response.ok,
-        flagResponseOnCacheHit: '__cached'
-    })
+  throttlingCache({
+    /* Options - defaults below */
+    throttle: 1000,
+    skip: (url, opts) => opts.skipCache || opts.method !== 'GET',
+    key: (url, opts) => opts.method + '@' + url,
+    clear: (url, opts) => false,
+    invalidate: (url, opts) => null,
+    condition: response => response.ok,
+    flagResponseOnCacheHit: '__cached'
+  })
 ])./* ... */
 ```
 
@@ -204,6 +204,6 @@ import wretch from 'wretch'
 import { delay } from 'wretch-middlewares'
 
 wretch().middlewares([
-    delay(1000)
+  delay(1000)
 ])./* ... */
 ```
