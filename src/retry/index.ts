@@ -10,8 +10,7 @@ export type OnRetryFunction = (args: {
   error?: Error,
   url: string,
   options: WretchOptions
-}) => OnRetryFunctionResponse | Promise<OnRetryFunctionResponse>
-export type ResolverFunction = (response: Response) => Response
+}) => void | OnRetryFunctionResponse | Promise<OnRetryFunctionResponse>
 export type RetryOptions = {
   delayTimer?: number,
   delayRamp?: DelayRampFunction,
@@ -19,7 +18,6 @@ export type RetryOptions = {
   until?: UntilFunction,
   onRetry?: OnRetryFunction,
   retryOnNetworkError?: boolean,
-  resolver?: ResolverFunction
 }
 export type RetryMiddleware = (options?: RetryOptions) => ConfiguredMiddleware
 
@@ -29,7 +27,6 @@ const defaultDelayRamp: DelayRampFunction = (delay, nbOfAttempts) => (
   delay * nbOfAttempts
 )
 const defaultUntil: UntilFunction = response => response && response.ok
-const defaultResolver: ResolverFunction = response => response.clone()
 
 /**
  * ## Retry middleware
@@ -73,13 +70,6 @@ const defaultResolver: ResolverFunction = response => response.clone()
  * > If true, will retry the request if a network error was thrown. Will also provide an 'error' argument to the `onRetry` and `until` methods.
  *
  * > *(default: false)*
- *
- * - *resolver* `(response: Response) => Response`
- *
- * > This function is called when resolving the fetch response from duplicate calls.
- * By default it clones the response to allow reading the body from multiple sources.
- *
- * > *(default: response => response.clone())*
  */
 export const retry: RetryMiddleware = ({
   delayTimer = 500,
@@ -87,15 +77,14 @@ export const retry: RetryMiddleware = ({
   maxAttempts = 10,
   until = defaultUntil,
   onRetry = null,
-  retryOnNetworkError = false,
-  resolver = defaultResolver
+  retryOnNetworkError = false
 } = {}) => {
 
   return next => (url, opts) => {
     let numberOfAttemptsMade = 0
 
     const checkStatus = (response?: Response, error?: Error) => {
-      return Promise.resolve(until(response && response.clone(), error)).then(done => {
+      return Promise.resolve(until(response, error)).then(done => {
         // If the response is unexpected
         if (!done) {
           numberOfAttemptsMade++
@@ -107,12 +96,12 @@ export const retry: RetryMiddleware = ({
               setTimeout(() => {
                 if (typeof onRetry === 'function') {
                   Promise.resolve(onRetry({
-                    response: response && resolver(response),
+                    response: response,
                     error,
                     url,
                     options: opts
                   })).then((values = {}) => {
-                    resolve(next(values.url || url, values.options || opts))
+                    resolve(next((values as any).url ?? url, (values as any).options ?? opts))
                   })
                 } else {
                   resolve(next(url, opts))

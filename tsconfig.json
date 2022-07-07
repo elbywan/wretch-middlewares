@@ -12,7 +12,8 @@
     "declarationDir": "dist",
     "noImplicitAny": false,
     "sourceMap": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "esModuleInterop": true
   },
   "include": [
     "src/**/*"
