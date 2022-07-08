@@ -1,7 +1,7 @@
 import wretch, { WretchOptions } from "wretch"
 import { retry } from "../src/index"
 
-export default describe("RetryMiddleware", () => {
+export default describe("Retry Middleware", () => {
   let logs: any[] = []
   const mock = (max = 5) => {
     const ref = { counter: 1 }

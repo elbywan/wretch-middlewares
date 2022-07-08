@@ -96,7 +96,7 @@ export const retry: RetryMiddleware = ({
               setTimeout(() => {
                 if (typeof onRetry === 'function') {
                   Promise.resolve(onRetry({
-                    response: response,
+                    response,
                     error,
                     url,
                     options: opts

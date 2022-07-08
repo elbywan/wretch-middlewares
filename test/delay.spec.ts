@@ -1,7 +1,7 @@
 import wretch from "wretch"
 import { delay } from "../src/index"
 
-export default describe("DelayMiddleware", () => {
+export default describe("Delay Middleware", () => {
   it("should delay requests", async () => {
     let before = 0
     let after = 0
@@ -15,6 +15,6 @@ export default describe("DelayMiddleware", () => {
       },
       delay(1000)
     ]).get().res()
-    expect(after - before).toBeGreaterThan(1000)
+    expect(after - before).toBeGreaterThanOrEqual(1000)
   })
 })

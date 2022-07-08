@@ -51,7 +51,7 @@
     "ts-jest": "^28.0.5",
     "tslint": "^6.1.3",
     "typescript": "^4.7.4",
-    "wretch": "file:../wretch"
+    "wretch": "^2"
   },
   "peerDependencies": {
     "wretch": "^2"

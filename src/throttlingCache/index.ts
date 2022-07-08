@@ -5,7 +5,7 @@ import { WretchOptions, WretchResponse, ConfiguredMiddleware } from 'wretch'
 export type ThrottlingCacheSkipFunction = (url: string, opts: WretchOptions) => boolean
 export type ThrottlingCacheKeyFunction = (url: string, opts: WretchOptions) => string
 export type ThrottlingCacheClearFunction = (url: string, opts: WretchOptions) => boolean
-export type ThrottlingCacheInvalidateFunction = (url: string, opts: WretchOptions) => string | RegExp | null
+export type ThrottlingCacheInvalidateFunction = (url: string, opts: WretchOptions) => string | RegExp | void
 export type ThrottlingCacheConditionFunction = (response: WretchOptions) => boolean
 export type ThrottlingCacheOptions = {
   throttle?: number,
@@ -16,7 +16,12 @@ export type ThrottlingCacheOptions = {
   condition?: ThrottlingCacheConditionFunction,
   flagResponseOnCacheHit?: string
 }
-export type ThrottlingCacheMiddleware = (options?: ThrottlingCacheOptions) => ConfiguredMiddleware
+export type ThrottlingCacheMiddleware = (options?: ThrottlingCacheOptions) => ConfiguredMiddleware & {
+  cacheResponse(key: any, response: any): void;
+  cache: Map<any, any>;
+  inflight: Map<any, any>;
+  throttling: Set<unknown>;
+}
 
 /* Defaults */
 
@@ -163,10 +168,13 @@ export const throttlingCache: ThrottlingCacheMiddleware = ({
   }
 
   // Programmatically cache a response
-  middleware['cache'] = function (key, response) {
+  middleware.cacheResponse = function (key, response) {
     throttleRequest(key)
     cache.set(key, response)
   }
+  middleware.cache = cache
+  middleware.inflight = inflight
+  middleware.throttling = throttling
 
   return middleware
 }

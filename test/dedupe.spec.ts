@@ -4,9 +4,8 @@ import { dedupe } from "../src/index"
 import http from "http"
 import { mock } from "./mock"
 
-export default describe("DedupeMiddleware", () => {
-  const PORT = 5001
-  const BASE_URL = `http://localhost:${PORT}`
+export default describe("Dedupe Middleware", () => {
+  const PORT = 0
   let server: http.Server | null = null;
   let logs: any[] = []
 
@@ -14,11 +13,22 @@ export default describe("DedupeMiddleware", () => {
     logs.push([url, options.method])
   }
 
-  beforeAll(() => {
+  const baseAddress = () => {
+    const { address, port } = (server as any).address()
+    return "http://" + address + ":" + port
+  }
+
+  beforeAll(done => {
     server = http.createServer((req, res) => {
       req.pipe(res)
     });
-    server.listen(PORT)
+    server.listen(PORT, "127.0.0.1")
+    server.once("listening", () => {
+      done()
+    })
+    server.once("error", () => {
+      done()
+    })
   })
 
   afterAll(() => {
@@ -30,7 +40,7 @@ export default describe("DedupeMiddleware", () => {
   })
 
   it("should prevent sending multiple requests", async () => {
-    const w = wretch(BASE_URL).polyfills({ fetch: mock(log) }).middlewares([dedupe()])
+    const w = wretch(baseAddress()).polyfills({ fetch: mock(log) }).middlewares([dedupe()])
     const results = await Promise.all([
       w.get("/one").res(),
       w.get("/one").res(),
@@ -43,16 +53,16 @@ export default describe("DedupeMiddleware", () => {
     ])
 
     expect(logs).toEqual([
-      ["http://localhost:5001/one", "GET"],
-      ["http://localhost:5001/two", "GET"],
-      ["http://localhost:5001/three", "GET"],
-      ["http://localhost:5001/one", "POST"],
-      ["http://localhost:5001/one", "POST"]
+      [baseAddress() + "/one", "GET"],
+      [baseAddress() + "/two", "GET"],
+      [baseAddress() + "/three", "GET"],
+      [baseAddress() + "/one", "POST"],
+      [baseAddress() + "/one", "POST"]
     ]);
 
     results.forEach((result, i) => {
       expect(result).toMatchObject({
-        url: "http://localhost:5001/" + ((i < 3 || i > 5) ? "one" : i < 5 ? "two" : "three"),
+        url: baseAddress() + "/" + ((i < 3 || i > 5) ? "one" : i < 5 ? "two" : "three"),
         status: 200,
         statusText: 'OK',
       })
@@ -60,7 +70,7 @@ export default describe("DedupeMiddleware", () => {
   })
 
   it("should skip some requests", async () => {
-    const w = wretch(BASE_URL).polyfills({ fetch: mock(log) }).middlewares([dedupe({
+    const w = wretch(baseAddress()).polyfills({ fetch: mock(log) }).middlewares([dedupe({
       skip: (url, options) => { return options.skip || url.endsWith("/toto") }
     })])
     await Promise.all([
@@ -73,15 +83,15 @@ export default describe("DedupeMiddleware", () => {
     ])
 
     expect(logs).toEqual([
-      ["http://localhost:5001/one", "GET"],
-      ["http://localhost:5001/one", "GET"],
-      ["http://localhost:5001/toto", "GET"],
-      ["http://localhost:5001/toto", "GET"],
+      [baseAddress() + "/one", "GET"],
+      [baseAddress() + "/one", "GET"],
+      [baseAddress() + "/toto", "GET"],
+      [baseAddress() + "/toto", "GET"],
     ])
   })
 
   it("should key requests", async () => {
-    const w = wretch(BASE_URL).polyfills({ fetch: mock(log) }).middlewares([dedupe({
+    const w = wretch(baseAddress()).polyfills({ fetch: mock(log) }).middlewares([dedupe({
       key: () => { return "/same-key" }
     })])
 
@@ -92,12 +102,12 @@ export default describe("DedupeMiddleware", () => {
     ])
 
     expect(logs).toEqual([
-      ["http://localhost:5001/one", "GET"]
+      [baseAddress() + "/one", "GET"]
     ])
 
     results.forEach((result, i) => {
       expect(result).toMatchObject({
-        url: "http://localhost:5001/one",
+        url: baseAddress() + "/one",
         status: 200,
         statusText: 'OK',
       })
@@ -105,7 +115,7 @@ export default describe("DedupeMiddleware", () => {
   })
 
   it("should allow custom resolvers", async () => {
-    const w = wretch(BASE_URL).polyfills({ fetch: mock(log) }).middlewares([dedupe({
+    const w = wretch(baseAddress()).polyfills({ fetch: mock(log) }).middlewares([dedupe({
       resolver: res => res
     })])
 
