@@ -11,6 +11,11 @@
 	A collection of <a href="https://github.com/elbywan/wretch#middlewares" target="_blank">middlewares</a> for the <a href="https://github.com/elbywan/wretch" target="_blank">Wretch</a> library.
 </h4>
 
+# Deprecation Notice
+
+#### :warning: This repository is now deprecated, middlewares have been integrated into the main [`wretch`](https://github.com/elbywan/wretch#middlewares) package starting from wretch v2.0.0
+
+
 # Installation
 
 ### Prerequisite: [install Wretch](https://github.com/elbywan/wretch#installation)
